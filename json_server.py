@@ -25,7 +25,6 @@ class JsonServer:
         sock.setblocking(False)
         while True:
             client, addr = await self.loop.sock_accept(sock)
-            print('Connection from', addr)
             self.loop.create_task(self.json_handler(client))
 
     async def json_handler(self, client):
@@ -34,40 +33,36 @@ class JsonServer:
                 raw_data = await self.loop.sock_recv(client, 10000)
                 if not raw_data:
                     break
-                print("Just received data ", raw_data)
                 try:
                     data = json.loads(raw_data.strip().decode("utf-8"))
                 except:
                     # In case a valid json dose not come in ignore incoming message and ignore it.
                     # TODO: Log it.
-                    print("Something went wrong while parsing json.")
                     await self.loop.sock_sendall(client, b'Rejected: ' + raw_data)
                     break
                 if data and data['action'] == 'apply':
                     # TODO Change first condition above to actually check if json is valid as expected.
                     ts = datetime.strptime(data['when'], '%Y-%m-%d %H:%M:%S')
-                    print('Updating queue')
                     await self.queue.put((ts, data['template']))
                     await self.loop.sock_sendall(client, b'Accepted: ' + raw_data)
                 else:
                     await self.loop.sock_sendall(client, b'Rejected: ' + raw_data)
-        print('Connection closed')
 
     async def queue_dumper(self):
+
         while True:
             if not self.queue.qsize():
-                print("Nothing in queue to print. Will try later.")
-                await asyncio.sleep(5)
+                await asyncio.sleep(1)
             else:
-                print("Got something in queue. Here is what I see:")
                 _copy = PriorityQueue()
                 while not self.queue.empty():
                     await _copy.put(await self.queue.get())
+                print(chr(27) + "[2J") # Bit of Ctr + L magic trick
                 while not _copy.empty():
                     element = await _copy.get()
                     print(element)
                     await self.queue.put(element)
-            await asyncio.sleep(5)
+            await asyncio.sleep(1)
 
 if __name__ == '__main__':
     server = JsonServer()
