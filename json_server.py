@@ -40,7 +40,7 @@ class JsonServer:
                     # TODO: Log it.
                     await self.loop.sock_sendall(client, b'Rejected: ' + raw_data)
                     break
-                if data and data['action'] == 'apply':
+                if self.is_valid_data_input(data) and data['action'] == 'apply':
                     # TODO Change first condition above to actually check if json is valid as expected.
                     ts = datetime.strptime(data['when'], '%Y-%m-%d %H:%M:%S')
                     await self.queue.put((ts, data['template']))
@@ -48,8 +48,18 @@ class JsonServer:
                 else:
                     await self.loop.sock_sendall(client, b'Rejected: ' + raw_data)
 
-    async def queue_dumper(self):
+    def is_valid_data_input(self, data):
+        if not data.get('action'):
+            return False
+        if not data.get('when'):
+            return False
+        if not data.get('template'):
+            return False
+        return True
 
+    async def queue_dumper(self):
+        """Dumps status of queue to terminal (Eventually a file) every second."""
+        # TODO : Ensure this also prints to a file.
         while True:
             if not self.queue.qsize():
                 await asyncio.sleep(1)
