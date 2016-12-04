@@ -2,7 +2,7 @@
 
 import sys
 if sys.version_info < (3, 4):
-    print("You are using Python earlier than Python 3.5")
+    print("Oh Noooooo.... You are using Python earlier than Python 3.5")
     print("No joy in my life with older version.")
     sys.exit("Try running me with Python 3.5 or later")
 
@@ -21,7 +21,7 @@ class JsonServer:
     the queue every second and saves the template to a file.
 
     Example JSON string:
-    {"action": "apply", "when": "2016-4-19 09:00:02", "templat": "AAAAAA"}
+    {"action": "apply", "when": "2016-4-19 09:00:02", "template": "AAAAAA"}
     """
 
     def __init__(self):
